@@ -17,6 +17,7 @@ data segment
     msg_3 db 'Configurarea Sistemului.$'
     msg_4 db 'O zi buna!$'
 	msg_5 db '	Optiune invalida!$'
+	nr_inmatriculare db 0 ; Variabila pentru a salva numerele de inmatriculare
 	
 data ends
 
@@ -128,6 +129,13 @@ intrare:
     int 21h
 	;
 	;Codul Madalin 
+	;Introducere numar de inmatriculare
+	;Anulare
+	;---------------------------------
+	;Selectie nivel (Verifică dacă sunt locuri disponibile)
+	;Anulare
+	;---------------------------------
+	;Pornește Timerul (Salvează ora la care a intrat)
 	;
     jmp terminare
 
@@ -137,6 +145,14 @@ iesire:
     int 21h
 	;
 	;Codul Gabi
+	;Introducere numar de inmatriculare
+	;Anulare
+	;---------------------------------
+	;Afișare sumă către plată (Calculează cât timp sa aflat mașina în parcare)
+	;Selectie metoda de plata
+	;Anulare
+	;---------------------------------
+	;Plata 
 	;
     jmp terminare
 
@@ -146,6 +162,9 @@ configurare:
     int 21h
 	;
 	; Codul Denisa
+	; *Parola*
+	; Configurare disponibilitate nivel
+	; Configurare metode de plata
 	;
 	
     jmp terminare
@@ -158,8 +177,8 @@ anulare:
     jmp terminare
 
 terminare:
-    mov ah, 4Ch
-    int 21h ; Termină programul
+    mov ah, 4ch ; Finalizează programul
+    int 21h 
 
 code ENDS
 end start
