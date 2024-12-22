@@ -1,2 +1,0 @@
-Numar de Inmatriculare,Nivel,Timp Intrare,Timp Iesire
-BV09Bra,1,9:28, -
