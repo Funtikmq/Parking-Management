@@ -18,6 +18,13 @@ data segment
     msg_4 db 'O zi buna!$'
 	msg_5 db '	Optiune invalida!$'
 	nr_inmatriculare db 0 ; Variabila pentru a salva numerele de inmatriculare
+	msg_time db "Introduceti numarul de ore petrecute in parcare: $"
+    msg_payment db "Selectati metoda de plata: (1) Cash (2) Card$"
+    msg_invalid db "Optiune invalida. Incercati din nou.$"
+    msg_total db "Total de plata: $"
+    msg_lei db " lei.$"
+    payment_cash db "Ati selectat plata cash.$"
+    payment_card db "Ati selectat plata cu cardul.$"
 	
 data ends
 
@@ -143,18 +150,66 @@ iesire:
     mov ah, 09h
     lea dx, msg_2
     int 21h
-	;
-	;Codul Gabi
-	;Introducere numar de inmatriculare
-	;Anulare
-	;---------------------------------
-	;Afișare sumă către plată (Calculează cât timp sa aflat mașina în parcare)
-	;Selectie metoda de plata
-	;Anulare
-	;---------------------------------
-	;Plata 
-	;
+	
+	mov ah, 09h
+    lea dx, msg_time
+    int 21h ; Afiseaza mesaj pentru numarul de ore petrecute
+	
+	call read_number
+    mov [hours], al
+
+    ; Calculare total (pret pe ora = 3 lei)
+    mov al, [hours]
+    mov bl, 3
+    mul bl
+    mov [total], al
+	
+	payment_selection:
+    mov ah, 09h
+    lea dx, msg_payment
+    int 21h ; Afiseaza optiuni de plata
+
+    call read_char
+    mov [payment_option], al
+
+    cmp al, '1'
+    je payment_cash
+    cmp al, '2'
+    je payment_card
+
+    mov ah, 09h
+    lea dx, msg_invalid
+    int 21h ; Optiune invalida
+    jmp payment_selection
+	
+	payment_cash:
+    mov ah, 09h
+    lea dx, payment_cash
+    int 21h
+    jmp print_total
+
+payment_card:
+    mov ah, 09h
+    lea dx, payment_card
+    int 21h
+    jmp print_total
+
+print_total:
+    mov ah, 09h
+    lea dx, msg_total
+    int 21h
+
+    ; Afiseaza totalul de plata
+    mov al, [total]
+    call print_number
+
+    mov ah, 09h
+    lea dx, msg_lei
+    int 21h
     jmp terminare
+	
+    
+	
 
 configurare:
     mov ah, 09h
