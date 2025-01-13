@@ -2,36 +2,40 @@ MODEL small
 stack 100h
 
 data segment
-    welcome_msg db 'Bine Ati Venit', 0Dh, 0Ah, '$'
+    welcome_msg db 'Bine ati Venit', 0Dh, 0Ah, '$'
     optiune_msg db 'Selectati o Optiune:', 0Dh, 0Ah, '$'
-    op_1 db '1. Intrare In Parcare', 0Dh, 0Ah, '$'
-    op_2 db '2. Iesire din Parcare', 0Dh, 0Ah, '$'
-    op_3 db '3. Configurarea Sistemului', 0Dh, 0Ah, '$'
-    op_4 db '4. Anulare', 0Dh, 0Ah, '$'
+    op_1 db '1.Intrare in Parcare', 0Dh, 0Ah, '$'
+    op_2 db '2.Iesire din Parcare', 0Dh, 0Ah, '$'
+    op_3 db '3.Configurarea Sistemului', 0Dh, 0Ah, '$'
+    op_4 db '4.Anulare', 0Dh, 0Ah, '$'
     optiune db 0
     msg_1 db ' Intrare in Parcare.', 0Dh, 0Ah, '$'
     msg_2 db ' Iesire din Parcare.', 0Dh, 0Ah, '$'
     msg_3 db ' Configurarea Sistemului.', 0Dh, 0Ah, '$'
-    msg_4 db ' O zi buna!', 0Dh, 0Ah, '$'
-    msg_5 db ' Optiune invalida!', 0Dh, 0Ah, '$'
+    msg_4 db ' O Zi Buna!', 0Dh, 0Ah, '$'
+    msg_5 db ' Optiune Invalida!', 0Dh, 0Ah, '$'
     nr_inmatriculare db 7 dup(?)
     nivel_ales db 0
-    msg_intr_nr db 'Introduceti numarul de inmatriculare:', 0Dh, 0Ah, '$'
-    msg_select_lvl db 'Alegeti nivelul (1-4):', 0Dh, 0Ah, '$'
-    msg_succes db ' Intrare inregistrata cu succes!', 0Dh, 0Ah, '$'
-    msg_invalid_lvl db ' Nivel invalid! Incercati din nou.', 0Dh, 0Ah, '$'
-    msg_no_space db ' Nivel complet! Alegeti alt nivel.', 0Dh, 0Ah, '$'
-    msg_metoda_plata db 'Selectati metoda de plata (1. Cash, 2. Card):', 0Dh, 0Ah, '$'
-    msg_plata_cash db ' Plata cash efectuata cu succes.', 0Dh, 0Ah, '$'
-    msg_plata_card db ' Plata cu cardul efectuata cu succes.', 0Dh, 0Ah, '$'
-    msg_iesire_succes db ' Iesire inregistrata cu succes. Va multumim!', 0Dh, 0Ah, '$'
+    msg_intr_nr db 'Introduceti Numarul de Inmatriculare:', 0Dh, 0Ah, '$'
+    msg_select_lvl db 'Alegeti Nivelul (1-4):', 0Dh, 0Ah, '$'
+    msg_succes db ' Intrare Inregistrata cu Succes!', 0Dh, 0Ah, '$'
+    msg_invalid_lvl db ' Nivel Invalid! Incercati din Nou.', 0Dh, 0Ah, '$'
+    msg_no_space db ' Nivel Complet! Alegeti alt Nivel.', 0Dh, 0Ah, '$'
+    msg_metoda_plata db 'Selectati Metoda de Plata (1. Cash, 2. Card):', 0Dh, 0Ah, '$'
+    msg_plata_cash db ' Plata Cash Efectuata cu Succes.', 0Dh, 0Ah, '$'
+    msg_plata_card db ' Plata cu Cardul Efectuata cu Succes.', 0Dh, 0Ah, '$'
+    msg_iesire_succes db 'Iesire Inregistrata cu Succes. Va Multumim!', 0Dh, 0Ah, '$'
 	msg_config_1 db '1.Modificare Disponibilitate Nivele', 0Dh, 0Ah, '$'
 	msg_config_2 db '2.Modificare Metoda de Plata', 0Dh, 0Ah, '$'
-    msg_disp_lvl db ' Nivel marcat ca disponibil.', 0Dh, 0Ah, '$'
-    msg_indisp_lvl db ' Nivel marcat ca indisponibil.', 0Dh, 0Ah, '$'
-    msg_disp_check db ' Nivel indisponibil! Alegeti alt nivel.', 0Dh, 0Ah, '$'
+	msg_config_3 db '3.Spre Ecranul Principal', 0Dh, 0Ah, '$'
+    msg_disp_lvl db ' Nivel marcat Disponibil.', 0Dh, 0Ah, '$'
+    msg_indisp_lvl db ' Nivel marcat Indisponibil.', 0Dh, 0Ah, '$'
+    msg_disp_check db ' Nivel Indisponibil! Alegeti alt Nivel.', 0Dh, 0Ah, '$'
     parcare db 4 dup(0)
     disponibilitate db 4 dup(1) ; 1 = disponibil, 0 = indisponibil
+    disponibilitate_plata db 2 dup(1) ; 1 = disponibil, 0 = indisponibil
+	msg_indisp_plata db ' Metoda de Plata Este Indisponibila', 0Dh, 0Ah, '$'
+	msg_disp_plata db ' Metoda de Plata Este Disponibila', 0Dh, 0Ah, '$'
 
 data ends
 
@@ -115,8 +119,15 @@ anulare_call:
 citire_optiune endp
 
 intrare proc
+	
     mov ah, 09h
     lea dx, msg_1
+    int 21h
+	
+	mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
     int 21h
 
     mov ah, 09h
@@ -125,6 +136,7 @@ intrare proc
 
     lea di, nr_inmatriculare 
     mov cx, 7 
+		
 
 citire_nr:
     mov ah, 01h 
@@ -226,7 +238,6 @@ indisponibil_lvl:
 
 intrare endp
 
-
 iesire proc
     ; Mesaj pentru iesire din parcare
     mov ah, 09h
@@ -263,6 +274,7 @@ citire_nr_iesire:
     mov dl, 0Ah ; Line feed
     int 21h
 
+selectare_metoda_plata:
     ; Mesaj pentru selectarea metodei de plată
     mov ah, 09h
     lea dx, msg_metoda_plata
@@ -271,12 +283,39 @@ citire_nr_iesire:
     ; Citirea opțiunii de plată
     mov ah, 01h
     int 21h
-    cmp al, '1'
+    sub al, '0'
+    cmp al, 1
+    jl optiune_invalida_plata
+    cmp al, 2
+    jg optiune_invalida_plata
+
+    lea si, disponibilitate_plata
+    dec al
+    mov bl, al
+    cmp byte ptr [si+bx], 1
+    je metoda_disponibila
+
+    ; Mesaj pentru metoda de plată indisponibilă
+    mov ah, 09h
+    lea dx, msg_indisp_plata
+    int 21h
+
+    ; Linie nouă după mesaj
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
+    jmp selectare_metoda_plata
+
+metoda_disponibila:
+    cmp bl, 0
     je cash_payment
-    cmp al, '2'
+    cmp bl, 1
     je card_payment
 
-    ; Mesaj pentru opțiune invalidă
+optiune_invalida_plata:
     mov ah, 09h
     lea dx, msg_5
     int 21h
@@ -288,7 +327,7 @@ citire_nr_iesire:
     mov dl, 0Ah ; Line feed
     int 21h
 
-    jmp citire_optiune
+    jmp selectare_metoda_plata
 
 cash_payment:
     ; Procesare plată cash
@@ -303,7 +342,7 @@ cash_payment:
     mov dl, 0Ah ; Line feed
     int 21h
 
-    jmp citire_optiune
+    jmp iesire_succes
 
 card_payment:
     ; Procesare plată card
@@ -318,9 +357,25 @@ card_payment:
     mov dl, 0Ah ; Line feed
     int 21h
 
+    jmp iesire_succes
+
+iesire_succes:
+    ; Confirmarea ieșirii și afișarea unui mesaj de succes
+    mov ah, 09h
+    lea dx, msg_iesire_succes
+    int 21h
+
+    ; Linie nouă după mesaj
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
     jmp citire_optiune
 
 iesire endp
+
 
 configurare proc
     mov ah, 09h
@@ -336,6 +391,10 @@ configurare proc
     lea dx, msg_config_2
     int 21h
 
+    mov ah, 09h
+    lea dx, msg_config_3
+    int 21h
+
 	mov ah, 01h ; citirea optiunii de la tastatura
     int 21h
 	
@@ -344,12 +403,26 @@ configurare proc
 	cmp al, 1
 	je selectare_config_nivel
 	cmp al, 2
-	je configurare_metoda_plata
+	jne skip_configurare_metoda
+	jmp configurare_metoda_plata
+	skip_configurare_metoda:
+    cmp al, 3
+    je anulare_configurare
 	
 	; Daca optiunea nu este valida, afisam mesaj si reluam selectia
+anulare_configurare:
+	mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+	
+    mov dl, 0Ah ; Line feed
+    int 21h
+
+    jmp citire_optiune
+
 invalid_option:
-	mov ah, 09h
-	lea dx, msg_5
+    mov ah, 09h
+    lea dx, msg_5
 	int 21h
 	
 	mov ah, 02h
@@ -453,22 +526,67 @@ configurare_metoda_plata:
     mov ah, 01h ; citirea opțiunii de la tastatură
     int 21h
 
-    ; Logica pentru metoda de plata
-    
+    sub al, '0'
+    cmp al, 1
+    jl invalid_metoda_config
+    cmp al, 2
+    jg invalid_metoda_config
+
+    lea si, disponibilitate_plata
+    dec al
+    mov bl, al
+    mov al, [si+bx]
+    xor al, 1
+    mov [si+bx], al
+
+    cmp al, 1
+    je metoda_disponibila_config
+
+metoda_indisponibila_config:
     mov ah, 09h
-    lea dx, msg_5
+    lea dx, msg_indisp_plata
     int 21h
-	
-	mov ah, 02h
+
+    ; Linie nouă
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
+    jmp configurare
+
+metoda_disponibila_config:
+    mov ah, 09h
+    lea dx, msg_disp_plata
+    int 21h
+
+    ; Linie nouă
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
+    jmp configurare
+
+invalid_metoda_config:
+    mov ah, 09h
+    lea dx, msg_invalid_lvl
+    int 21h
+
+    ; Linie nouă
+    mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
 	
     mov dl, 0Ah ; Line feed
     int 21h
 
-    jmp configurare
+    jmp configurare_metoda_plata
 
 configurare endp
+
 
 
 anulare proc
