@@ -17,11 +17,11 @@ data segment
     nr_inmatriculare db 7 dup(?)
     nivel_ales db 0
     msg_intr_nr db 'Introduceti numarul de inmatriculare:', 0Dh, 0Ah, '$'
-    msg_select_lvl db ' Alegeti nivelul (1-4):', 0Dh, 0Ah, '$'
+    msg_select_lvl db 'Alegeti nivelul (1-4):', 0Dh, 0Ah, '$'
     msg_succes db ' Intrare inregistrata cu succes!', 0Dh, 0Ah, '$'
     msg_invalid_lvl db ' Nivel invalid! Incercati din nou.', 0Dh, 0Ah, '$'
     msg_no_space db ' Nivel complet! Alegeti alt nivel.', 0Dh, 0Ah, '$'
-    msg_metoda_plata db ' Selectati metoda de plata (1. Cash, 2. Card):', 0Dh, 0Ah, '$'
+    msg_metoda_plata db 'Selectati metoda de plata (1. Cash, 2. Card):', 0Dh, 0Ah, '$'
     msg_plata_cash db ' Plata cash efectuata cu succes.', 0Dh, 0Ah, '$'
     msg_plata_card db ' Plata cu cardul efectuata cu succes.', 0Dh, 0Ah, '$'
     msg_iesire_succes db ' Iesire inregistrata cu succes. Va multumim!', 0Dh, 0Ah, '$'
@@ -358,11 +358,18 @@ invalid_option:
 	
     mov dl, 0Ah ; Line feed
     int 21h
+	
 	jmp configurare
 
 ;Configurarea disponibilității nivelelor
 selectare_config_nivel:
 
+	mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+	
+    mov dl, 0Ah ; Line feed
+    int 21h
 
     mov ah, 09h
     lea dx, msg_select_lvl
@@ -424,6 +431,7 @@ invalid_lvl_config:
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
+	
     mov dl, 0Ah ; Line feed
     int 21h
 
@@ -431,6 +439,13 @@ invalid_lvl_config:
 
 ; Configurarea metodei de plată
 configurare_metoda_plata:
+	mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+	
+    mov dl, 0Ah ; Line feed
+    int 21h
+
     mov ah, 09h
     lea dx, msg_metoda_plata
     int 21h
