@@ -150,6 +150,39 @@ anulare_call:
 citire_optiune endp
 
 intrare proc
+    ; Verificare metode de plată disponibile
+    lea si, disponibilitate_plata
+    mov cx, 2 ; Două metode de plată (cash și card)
+    xor al, al ; AL inițializat la 0 pentru a număra metodele disponibile
+
+verificare_plata:
+    add al, [si] ; Adăugă valoarea metodei curente (1 = disponibil, 0 = indisponibil)
+    inc si
+    loop verificare_plata
+
+    cmp al, 0 ; Dacă nicio metodă nu este disponibilă
+    jne continuare_verificare_nivele ; Sari dacă cel puțin o metodă este disponibilă
+
+    jmp toate_metodele_indisponibile ; Salt lung pentru eticheta respectivă
+
+continuare_verificare_nivele:
+    ; Verificare nivele disponibile
+    lea si, disponibilitate
+    mov cx, 4 ; Patru nivele
+    xor al, al ; AL inițializat la 0 pentru a număra nivelele disponibile
+
+verificare_nivele:
+    add al, [si] ; Adăugă valoarea nivelului curent (1 = disponibil, 0 = indisponibil)
+    inc si
+    loop verificare_nivele
+
+    cmp al, 0 ; Dacă niciun nivel nu este disponibil
+    jne continuare_intrare ; Sari dacă cel puțin un nivel este disponibil
+
+    jmp toate_nivelele_indisponibile ; Salt lung pentru eticheta respectivă
+
+continuare_intrare:
+    ; Continuă cu procesul de intrare
     mov ah, 09h
     lea dx, msg_1
     int 21h
@@ -165,15 +198,15 @@ intrare proc
     lea dx, msg_intr_nr
     int 21h
 
-    lea di, nr_inmatriculare 
-    mov cx, 7 
+    lea di, nr_inmatriculare
+    mov cx, 7
 
 citire_nr:
-    mov ah, 01h 
+    mov ah, 01h
     int 21h
-    mov [di], al 
-    inc di 
-    loop citire_nr 
+    mov [di], al
+    inc di
+    loop citire_nr
 
     ; Linie nouă înainte de selectarea nivelului
     mov ah, 02h
@@ -266,7 +299,40 @@ indisponibil_lvl:
 
     jmp selectare_nivel
 
+    ; Afișare mesaj pentru metode de plată indisponibile
+
+toate_metodele_indisponibile:
+    mov ah, 09h
+    lea dx, msg_optiune_indisp
+    int 21h
+
+    ; Linie nouă după mesajul de eroare
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
+    jmp citire_optiune
+
+    ; Afișare mesaj pentru toate nivelele indisponibile
+
+toate_nivelele_indisponibile:
+    mov ah, 09h
+    lea dx, msg_nivel_indisp
+    int 21h
+
+    ; Linie nouă după mesajul de eroare
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
+    jmp citire_optiune
+
 intrare endp
+
 
 iesire proc
     ; Mesaj pentru iesire din parcare
@@ -405,7 +471,6 @@ iesire_succes:
     jmp citire_optiune
 
 iesire endp
-
 
 configurare proc
     mov ah, 09h
@@ -623,8 +688,6 @@ invalid_metoda_config:
     jmp configurare_metoda_plata
 
 configurare endp
-
-
 
 anulare proc
     mov ah, 09h
