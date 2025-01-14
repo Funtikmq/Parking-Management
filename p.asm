@@ -82,19 +82,19 @@ citire_optiune proc
     mov ah, 01h
     int 21h
 
-    mov optiune, al 
+    mov optiune, al
 
-    cmp al, '1'        
-    je verificare_nivele_ocupate ; Mutăm verificarea înainte de introducerea numărului
+    cmp al, '1'
+    je verificare_nivele_ocupate
 
-    cmp al, '2'        
-    je iesire_call       
+    cmp al, '2'
+    je iesire_call
 
-    cmp al, '3'        
-    je configurare_call  
+    cmp al, '3'
+    je configurare_call
 
-    cmp al, '4'        
-    je anulare_call      
+    cmp al, '4'
+    je anulare_call
 
     mov ah, 09h
     lea dx, msg_5
@@ -105,14 +105,14 @@ citire_optiune proc
 verificare_nivele_ocupate:
     lea si, parcare
     mov cx, 4
-    xor al, al ; Al inițializat la 0 pentru a număra spațiile ocupate
+    xor al, al
 
 verificare_ocupare:
     add al, [si]
     inc si
     loop verificare_ocupare
 
-    cmp al, 8 ; Fiecare nivel poate avea maximum 2 mașini, deci 4 nivele ocupate = 8 mașini
+    cmp al, 8
     je toate_nivelele_ocupate
 
     jmp intrare_call
@@ -122,11 +122,10 @@ toate_nivelele_ocupate:
     lea dx, msg_nivel_indisp
     int 21h
 
-    ; Linie nouă după mesaj
     mov ah, 02h
-    mov dl, 0Dh ; Carriage return
+    mov dl, 0Dh
     int 21h
-    mov dl, 0Ah ; Line feed
+    mov dl, 0Ah
     int 21h
 
     jmp citire_optiune
@@ -150,48 +149,51 @@ anulare_call:
 citire_optiune endp
 
 intrare proc
-    ; Verificare metode de plată disponibile
     lea si, disponibilitate_plata
-    mov cx, 2 ; Două metode de plată (cash și card)
-    xor al, al ; AL inițializat la 0 pentru a număra metodele disponibile
+    mov cx, 2
+    xor al, al
 
 verificare_plata:
-    add al, [si] ; Adăugă valoarea metodei curente (1 = disponibil, 0 = indisponibil)
+    add al, [si]
     inc si
     loop verificare_plata
 
-    cmp al, 0 ; Dacă nicio metodă nu este disponibilă
-    jne continuare_verificare_nivele ; Sari dacă cel puțin o metodă este disponibilă
+    cmp al, 0
+    jne continuare_verificare_nivele
 
-    jmp toate_metodele_indisponibile ; Salt lung pentru eticheta respectivă
+    mov ah, 09h
+    lea dx, msg_optiune_indisp
+    int 21h
+
+    mov ah, 02h
+    mov dl, 0Dh
+    int 21h
+    mov dl, 0Ah
+    int 21h
+
+    jmp citire_optiune
 
 continuare_verificare_nivele:
-    ; Verificare nivele disponibile
-    lea si, disponibilitate
-    mov cx, 4 ; Patru nivele
-    xor al, al ; AL inițializat la 0 pentru a număra nivelele disponibile
+    lea si, parcare
+    mov cx, 4
+    xor al, al
 
-verificare_nivele:
-    add al, [si] ; Adăugă valoarea nivelului curent (1 = disponibil, 0 = indisponibil)
+verificare_ocupare_nou:
+    add al, [si]
     inc si
-    loop verificare_nivele
+    loop verificare_ocupare_nou
 
-    cmp al, 0 ; Dacă niciun nivel nu este disponibil
-    jne continuare_intrare ; Sari dacă cel puțin un nivel este disponibil
+    cmp al, 8
+    je toate_nivelele_ocupate
 
-    jmp toate_nivelele_indisponibile ; Salt lung pentru eticheta respectivă
-
-continuare_intrare:
-    ; Continuă cu procesul de intrare
     mov ah, 09h
     lea dx, msg_1
     int 21h
 
-    ; Linie nouă după mesajul introductiv
     mov ah, 02h
-    mov dl, 0Dh ; Carriage return
+    mov dl, 0Dh
     int 21h
-    mov dl, 0Ah ; Line feed
+    mov dl, 0Ah
     int 21h
 
     mov ah, 09h
@@ -207,26 +209,24 @@ citire_nr:
     mov [di], al
     inc di
     loop citire_nr
-
-    ; Linie nouă înainte de selectarea nivelului
-    mov ah, 02h
+	
+	mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
     mov dl, 0Ah ; Line feed
     int 21h
 
-selectare_nivel:
     mov ah, 09h
     lea dx, msg_select_lvl
     int 21h
 
-    mov ah, 01h 
+    mov ah, 01h
     int 21h
-    sub al, '0' 
+    sub al, '0'
     cmp al, 1
-    jl invalid_lvl 
+    jl invalid_lvl
     cmp al, 4
-    jg invalid_lvl 
+    jg invalid_lvl
 
     mov nivel_ales, al
 
@@ -237,23 +237,23 @@ selectare_nivel:
     cmp al, 0
     je indisponibil_lvl
 
-    lea si, parcare 
+    lea si, parcare
     mov al, [si+bx]
     cmp al, 2
-    jge no_space    
+    jge no_space
 
     inc byte ptr [si+bx]
 
     mov ah, 09h
     lea dx, msg_succes
     int 21h
-
-    ; Linie nouă după mesajul de succes
-    mov ah, 02h
-    mov dl, 0Dh ; Carriage return
-    int 21h
-    mov dl, 0Ah ; Line feed
-    int 21h
+	
+	mov ah, 02h
+	mov dl, 0Dh
+	int 21h
+	
+	mov dl, 0Ah
+	int 21h
 
     jmp citire_optiune
 
@@ -262,71 +262,18 @@ no_space:
     lea dx, msg_no_space
     int 21h
 
-    ; Linie nouă după mesajul de eroare
-    mov ah, 02h
-    mov dl, 0Dh ; Carriage return
-    int 21h
-    mov dl, 0Ah ; Line feed
-    int 21h
-
-    jmp selectare_nivel
+    jmp citire_optiune
 
 invalid_lvl:
     mov ah, 09h
     lea dx, msg_invalid_lvl
     int 21h
 
-    ; Linie nouă după mesajul de eroare
-    mov ah, 02h
-    mov dl, 0Dh ; Carriage return
-    int 21h
-    mov dl, 0Ah ; Line feed
-    int 21h
-
-    jmp selectare_nivel
+    jmp citire_optiune
 
 indisponibil_lvl:
     mov ah, 09h
     lea dx, msg_disp_check
-    int 21h
-
-    ; Linie nouă după mesajul de eroare
-    mov ah, 02h
-    mov dl, 0Dh ; Carriage return
-    int 21h
-    mov dl, 0Ah ; Line feed
-    int 21h
-
-    jmp selectare_nivel
-
-    ; Afișare mesaj pentru metode de plată indisponibile
-
-toate_metodele_indisponibile:
-    mov ah, 09h
-    lea dx, msg_optiune_indisp
-    int 21h
-
-    ; Linie nouă după mesajul de eroare
-    mov ah, 02h
-    mov dl, 0Dh ; Carriage return
-    int 21h
-    mov dl, 0Ah ; Line feed
-    int 21h
-
-    jmp citire_optiune
-
-    ; Afișare mesaj pentru toate nivelele indisponibile
-
-toate_nivelele_indisponibile:
-    mov ah, 09h
-    lea dx, msg_nivel_indisp
-    int 21h
-
-    ; Linie nouă după mesajul de eroare
-    mov ah, 02h
-    mov dl, 0Dh ; Carriage return
-    int 21h
-    mov dl, 0Ah ; Line feed
     int 21h
 
     jmp citire_optiune
