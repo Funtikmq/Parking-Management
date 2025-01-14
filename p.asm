@@ -9,33 +9,35 @@ data segment
     op_3 db '3.Configurarea Sistemului', 0Dh, 0Ah, '$'
     op_4 db '4.Anulare', 0Dh, 0Ah, '$'
     optiune db 0
-    msg_1 db ' Intrare in Parcare.', 0Dh, 0Ah, '$'
-    msg_2 db ' Iesire din Parcare.', 0Dh, 0Ah, '$'
-    msg_3 db ' Configurarea Sistemului.', 0Dh, 0Ah, '$'
+    msg_1 db '-Intrare in Parcare.', 0Dh, 0Ah, '$'
+    msg_2 db '-Iesire din Parcare.', 0Dh, 0Ah, '$'
+    msg_3 db '-Configurarea Sistemului.', 0Dh, 0Ah, '$'
     msg_4 db ' O Zi Buna!', 0Dh, 0Ah, '$'
-    msg_5 db ' Optiune Invalida!', 0Dh, 0Ah, '$'
+    msg_5 db '-Optiune Invalida!', 0Dh, 0Ah, '$'
     nr_inmatriculare db 7 dup(?)
     nivel_ales db 0
     msg_intr_nr db 'Introduceti Numarul de Inmatriculare:', 0Dh, 0Ah, '$'
     msg_select_lvl db 'Alegeti Nivelul (1-4):', 0Dh, 0Ah, '$'
     msg_succes db ' Intrare Inregistrata cu Succes!', 0Dh, 0Ah, '$'
-    msg_invalid_lvl db ' Nivel Invalid! Incercati din Nou.', 0Dh, 0Ah, '$'
+    msg_invalid_lvl db '-Nivel Invalid! Incercati din Nou.', 0Dh, 0Ah, '$'
     msg_no_space db ' Nivel Complet! Alegeti alt Nivel.', 0Dh, 0Ah, '$'
     msg_metoda_plata db 'Selectati Metoda de Plata (1. Cash, 2. Card):', 0Dh, 0Ah, '$'
-    msg_plata_cash db ' Plata Cash Efectuata cu Succes.', 0Dh, 0Ah, '$'
-    msg_plata_card db ' Plata cu Cardul Efectuata cu Succes.', 0Dh, 0Ah, '$'
+    msg_plata_cash db '-Plata Cash Efectuata cu Succes.', 0Dh, 0Ah, '$'
+    msg_plata_card db '-Plata cu Cardul Efectuata cu Succes.', 0Dh, 0Ah, '$'
     msg_iesire_succes db 'Iesire Inregistrata cu Succes. Va Multumim!', 0Dh, 0Ah, '$'
-	msg_config_1 db '1.Modificare Disponibilitate Nivele', 0Dh, 0Ah, '$'
-	msg_config_2 db '2.Modificare Metoda de Plata', 0Dh, 0Ah, '$'
-	msg_config_3 db '3.Spre Ecranul Principal', 0Dh, 0Ah, '$'
-    msg_disp_lvl db ' Nivel marcat Disponibil.', 0Dh, 0Ah, '$'
-    msg_indisp_lvl db ' Nivel marcat Indisponibil.', 0Dh, 0Ah, '$'
-    msg_disp_check db ' Nivel Indisponibil! Alegeti alt Nivel.', 0Dh, 0Ah, '$'
+    msg_config_1 db '1.Modificare Disponibilitate Nivele', 0Dh, 0Ah, '$'
+    msg_config_2 db '2.Modificare Metoda de Plata', 0Dh, 0Ah, '$'
+    msg_config_3 db '3.Spre Ecranul Principal', 0Dh, 0Ah, '$'
+    msg_disp_lvl db '-Nivel marcat Disponibil.', 0Dh, 0Ah, '$'
+    msg_indisp_lvl db '-Nivel marcat Indisponibil.', 0Dh, 0Ah, '$'
+    msg_disp_check db '-Nivel Indisponibil! Alegeti alt Nivel.', 0Dh, 0Ah, '$'
+    msg_optiune_indisp db '-Intrarea este Indisponibila! Toate Metodele de Plata Sunt Dezactivate.', 0Dh, 0Ah, '$'
+	msg_nivel_indisp db '-Intrarea este Indisponibila! Toate Nivelele Sunt Ocupate.', 0Dh, 0Ah, '$'
     parcare db 4 dup(0)
     disponibilitate db 4 dup(1) ; 1 = disponibil, 0 = indisponibil
     disponibilitate_plata db 2 dup(1) ; 1 = disponibil, 0 = indisponibil
-	msg_indisp_plata db ' Metoda de Plata Este Indisponibila', 0Dh, 0Ah, '$'
-	msg_disp_plata db ' Metoda de Plata Este Disponibila', 0Dh, 0Ah, '$'
+    msg_indisp_plata db '-Metoda de Plata Este Indisponibila', 0Dh, 0Ah, '$'
+    msg_disp_plata db '-Metoda de Plata Este Disponibila', 0Dh, 0Ah, '$'
 
 data ends
 
@@ -45,7 +47,7 @@ ASSUME CS:code, DS:data
 start:
     mov ax, data
     mov ds, ax 
-    
+
     mov ah, 09h
     lea dx, welcome_msg
     int 21h 
@@ -53,9 +55,9 @@ start:
     mov ah, 09h
     lea dx, optiune_msg 
     int 21h 
-    
+
     call citire_optiune
-    
+
 terminare:
     mov ah, 4ch 
     int 21h 
@@ -76,28 +78,57 @@ citire_optiune proc
     mov ah, 09h
     lea dx, op_4
     int 21h
-    
+
     mov ah, 01h
     int 21h
-    
+
     mov optiune, al 
-    
+
     cmp al, '1'        
-    je intrare_call      
-    
+    je verificare_nivele_ocupate ; Mutăm verificarea înainte de introducerea numărului
+
     cmp al, '2'        
     je iesire_call       
-    
+
     cmp al, '3'        
     je configurare_call  
-    
+
     cmp al, '4'        
     je anulare_call      
-    
+
     mov ah, 09h
     lea dx, msg_5
     int 21h
-    
+
+    jmp citire_optiune
+
+verificare_nivele_ocupate:
+    lea si, parcare
+    mov cx, 4
+    xor al, al ; Al inițializat la 0 pentru a număra spațiile ocupate
+
+verificare_ocupare:
+    add al, [si]
+    inc si
+    loop verificare_ocupare
+
+    cmp al, 8 ; Fiecare nivel poate avea maximum 2 mașini, deci 4 nivele ocupate = 8 mașini
+    je toate_nivelele_ocupate
+
+    jmp intrare_call
+
+toate_nivelele_ocupate:
+    mov ah, 09h
+    lea dx, msg_nivel_indisp
+    int 21h
+
+    ; Linie nouă după mesaj
+    mov ah, 02h
+    mov dl, 0Dh ; Carriage return
+    int 21h
+    mov dl, 0Ah ; Line feed
+    int 21h
+
     jmp citire_optiune
 
 intrare_call:
@@ -119,12 +150,12 @@ anulare_call:
 citire_optiune endp
 
 intrare proc
-	
     mov ah, 09h
     lea dx, msg_1
     int 21h
-	
-	mov ah, 02h
+
+    ; Linie nouă după mesajul introductiv
+    mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
     mov dl, 0Ah ; Line feed
@@ -136,7 +167,6 @@ intrare proc
 
     lea di, nr_inmatriculare 
     mov cx, 7 
-		
 
 citire_nr:
     mov ah, 01h 
@@ -381,6 +411,13 @@ configurare proc
     mov ah, 09h
     lea dx, msg_3
     int 21h
+	
+	mov ah,02h
+	mov dl, 0Dh ; Carriage return
+	int 21h
+	
+	mov dl,0Ah	; Line feed
+	int 21h
 
 	;Selecția opțiunii de configurare
 	mov ah, 09h
@@ -479,7 +516,7 @@ nivel_indisponibil:
     mov dl, 0Ah ; Line feed
     int 21h
 
-    jmp citire_optiune
+    jmp configurare
 
 nivel_disponibil:
     mov ah, 09h
@@ -493,7 +530,7 @@ nivel_disponibil:
     mov dl, 0Ah ; Line feed
     int 21h
 
-    jmp citire_optiune
+    jmp configurare
 
 invalid_lvl_config:
     mov ah, 09h
@@ -572,7 +609,7 @@ metoda_disponibila_config:
 
 invalid_metoda_config:
     mov ah, 09h
-    lea dx, msg_invalid_lvl
+    lea dx, msg_5
     int 21h
 
     ; Linie nouă
