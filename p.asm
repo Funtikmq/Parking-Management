@@ -63,6 +63,7 @@ terminare:
     int 21h 
 
 citire_optiune proc
+; Showing the options
     mov ah, 09h
     lea dx, op_1
     int 21h
@@ -79,13 +80,14 @@ citire_optiune proc
     lea dx, op_4
     int 21h
 
-    mov ah, 01h
+; Reading the option from the keyboard
+
+    mov ah, 01h 
     int 21h
 
     mov optiune, al
-
     cmp al, '1'
-    je verificare_nivele_ocupate
+    je verificare_nivele_ocupate ; Checking if the parking is not busy
 
     cmp al, '2'
     je iesire_call
@@ -97,16 +99,19 @@ citire_optiune proc
     je anulare_call
 
     mov ah, 09h
-    lea dx, msg_5
+    lea dx, msg_5	; The exit message
     int 21h
 
     jmp citire_optiune
+
+; Checking if the levels are not busy
 
 verificare_nivele_ocupate:
     lea si, parcare
     mov cx, 4
     xor al, al
 
+;Checking if the slots of the level are not busy
 verificare_ocupare:
     add al, [si]
     inc si
@@ -117,6 +122,7 @@ verificare_ocupare:
 
     jmp intrare_call
 
+; All slots are busy
 toate_nivelele_ocupate:
     mov ah, 09h
     lea dx, msg_nivel_indisp
@@ -129,29 +135,36 @@ toate_nivelele_ocupate:
     int 21h
 
     jmp citire_optiune
-
+	
+; calling the enter process
 intrare_call:
     call intrare
     jmp terminare
-
+	
+; calling the exit process
 iesire_call:
     call iesire
     jmp terminare
 
+; calling the config process
 configurare_call:
     call configurare
     jmp citire_optiune
 
+; calling the cancel process
 anulare_call:
     call anulare
     jmp terminare
 
 citire_optiune endp
 
+; Enter Process
 intrare proc
     lea si, disponibilitate_plata
     mov cx, 2
     xor al, al
+
+; Checking if at least one method of paying is avaliable
 
 verificare_plata:
     add al, [si]
@@ -173,6 +186,7 @@ verificare_plata:
 
     jmp citire_optiune
 
+; Checking if parking slots of the lvl are not busy
 continuare_verificare_nivele:
     lea si, parcare
     mov cx, 4
@@ -191,18 +205,20 @@ verificare_ocupare_nou:
     int 21h
 
     mov ah, 02h
-    mov dl, 0Dh
+    mov dl, 0Dh ; Carriage return
     int 21h
-    mov dl, 0Ah
+	
+    mov dl, 0Ah ; Line Feed
     int 21h
 
     mov ah, 09h
-    lea dx, msg_intr_nr
+    lea dx, msg_intr_nr ; Message to enter the plate numbers
     int 21h
 
     lea di, nr_inmatriculare
     mov cx, 7
 
+; Reading the plate numbers process
 citire_nr:
     mov ah, 01h
     int 21h
@@ -213,11 +229,12 @@ citire_nr:
 	mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
+	
     mov dl, 0Ah ; Line feed
     int 21h
 
     mov ah, 09h
-    lea dx, msg_select_lvl
+    lea dx, msg_select_lvl	; Message to enter the lvl
     int 21h
 
     mov ah, 01h
@@ -230,6 +247,7 @@ citire_nr:
 
     mov nivel_ales, al
 
+; Checking if the lvl is avaliable
     lea si, disponibilitate
     dec al
     mov bl, al
@@ -249,14 +267,15 @@ citire_nr:
     int 21h
 	
 	mov ah, 02h
-	mov dl, 0Dh
+	mov dl, 0Dh ; Carriage return
 	int 21h
 	
-	mov dl, 0Ah
+	mov dl, 0Ah ; Line Feed
 	int 21h
 
     jmp citire_optiune
 
+; If there is no space on the lvl
 no_space:
     mov ah, 09h
     lea dx, msg_no_space
@@ -264,13 +283,15 @@ no_space:
 
     jmp citire_optiune
 
+; If lvl does not exist
 invalid_lvl:
     mov ah, 09h
     lea dx, msg_invalid_lvl
     int 21h
 
     jmp citire_optiune
-
+	
+; If lvl is not avaliable
 indisponibil_lvl:
     mov ah, 09h
     lea dx, msg_disp_check
@@ -280,29 +301,29 @@ indisponibil_lvl:
 
 intrare endp
 
-
+; Exit Process
 iesire proc
-    ; Mesaj pentru iesire din parcare
+    ; Message for exit from the parking
     mov ah, 09h
     lea dx, msg_2
     int 21h
 
-    ; Linie nouă după mesaj
+    
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
     mov dl, 0Ah ; Line feed
     int 21h
 
-    ; Mesaj pentru introducerea numărului de înmatriculare
+    ; Message to enter the plate numbers
     mov ah, 09h
     lea dx, msg_intr_nr
     int 21h
 
-    ; Citirea numărului de înmatriculare
     lea di, nr_inmatriculare 
     mov cx, 7 
 
+; Reading the plate numbers
 citire_nr_iesire:
     mov ah, 01h 
     int 21h
@@ -310,20 +331,19 @@ citire_nr_iesire:
     inc di 
     loop citire_nr_iesire 
 
-    ; Linie nouă după introducerea numărului
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
     mov dl, 0Ah ; Line feed
     int 21h
 
+; Selecting the pay method
 selectare_metoda_plata:
-    ; Mesaj pentru selectarea metodei de plată
     mov ah, 09h
     lea dx, msg_metoda_plata
     int 21h
 
-    ; Citirea opțiunii de plată
+    ; Reading the pay method
     mov ah, 01h
     int 21h
     sub al, '0'
@@ -338,12 +358,11 @@ selectare_metoda_plata:
     cmp byte ptr [si+bx], 1
     je metoda_disponibila
 
-    ; Mesaj pentru metoda de plată indisponibilă
+    ; Message for not avaliable pay method
     mov ah, 09h
     lea dx, msg_indisp_plata
     int 21h
 
-    ; Linie nouă după mesaj
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
@@ -352,18 +371,19 @@ selectare_metoda_plata:
 
     jmp selectare_metoda_plata
 
+; If the pay method is avaliable
 metoda_disponibila:
     cmp bl, 0
     je cash_payment
     cmp bl, 1
     je card_payment
 
+; If the pay method is unavalialbe
 optiune_invalida_plata:
     mov ah, 09h
     lea dx, msg_5
     int 21h
 
-    ; Linie nouă după mesaj
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
@@ -372,6 +392,7 @@ optiune_invalida_plata:
 
     jmp selectare_metoda_plata
 
+; Payment with cash
 cash_payment:
     ; Procesare plată cash
     mov ah, 09h
@@ -387,6 +408,7 @@ cash_payment:
 
     jmp iesire_succes
 
+; Payment with card
 card_payment:
     ; Procesare plată card
     mov ah, 09h
@@ -402,13 +424,12 @@ card_payment:
 
     jmp iesire_succes
 
+; Exit from the parking
 iesire_succes:
-    ; Confirmarea ieșirii și afișarea unui mesaj de succes
     mov ah, 09h
     lea dx, msg_iesire_succes
     int 21h
 
-    ; Linie nouă după mesaj
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
@@ -419,6 +440,7 @@ iesire_succes:
 
 iesire endp
 
+; Config Process
 configurare proc
     mov ah, 09h
     lea dx, msg_3
@@ -431,7 +453,7 @@ configurare proc
 	mov dl,0Ah	; Line feed
 	int 21h
 
-	;Selecția opțiunii de configurare
+	;Selecting the config option
 	mov ah, 09h
     lea dx, msg_config_1
     int 21h
@@ -444,10 +466,10 @@ configurare proc
     lea dx, msg_config_3
     int 21h
 
-	mov ah, 01h ; citirea optiunii de la tastatura
+	mov ah, 01h  ; Reading the value from the keyboard
     int 21h
 	
-	; Verificarea opțiunii selectate
+	; Checking the introduced value
 	sub al, '0'
 	cmp al, 1
 	je selectare_config_nivel
@@ -458,7 +480,7 @@ configurare proc
     cmp al, 3
     je anulare_configurare
 	
-	; Daca optiunea nu este valida, afisam mesaj si reluam selectia
+; If option does not exist
 anulare_configurare:
 	mov ah, 02h
     mov dl, 0Dh ; Carriage return
@@ -469,6 +491,7 @@ anulare_configurare:
 
     jmp citire_optiune
 
+; unavalialbe option
 invalid_option:
     mov ah, 09h
     lea dx, msg_5
@@ -483,7 +506,7 @@ invalid_option:
 	
 	jmp configurare
 
-;Configurarea disponibilității nivelelor
+;Config for lvl availability
 selectare_config_nivel:
 
 	mov ah, 02h
@@ -496,8 +519,8 @@ selectare_config_nivel:
     mov ah, 09h
     lea dx, msg_select_lvl
     int 21h
-
-    mov ah, 01h ; citirea optiunii de la tastatura
+	
+    mov ah, 01h ; Reading the value from the keyboard
     int 21h
 	
     sub al, '0'
@@ -516,6 +539,7 @@ selectare_config_nivel:
     cmp al, 1
     je nivel_disponibil
 
+; Setting the lvl unavalialbe
 nivel_indisponibil:
     mov ah, 09h
     lea dx, msg_indisp_lvl
@@ -530,12 +554,12 @@ nivel_indisponibil:
 
     jmp configurare
 
+; Setting the lvl avaliable
 nivel_disponibil:
     mov ah, 09h
     lea dx, msg_disp_lvl
     int 21h
 
-    ; Linie nouă după mesajul de disponibilitate
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
@@ -544,12 +568,12 @@ nivel_disponibil:
 
     jmp configurare
 
+; If the lvl does not exist
 invalid_lvl_config:
     mov ah, 09h
     lea dx, msg_invalid_lvl
     int 21h
 
-    ; Linie nouă după mesajul de nivel invalid
     mov ah, 02h
     mov dl, 0Dh ; Carriage return
     int 21h
@@ -559,7 +583,7 @@ invalid_lvl_config:
 
     jmp selectare_config_nivel
 
-; Configurarea metodei de plată
+; Config for payment method
 configurare_metoda_plata:
 	mov ah, 02h
     mov dl, 0Dh ; Carriage return
@@ -572,7 +596,7 @@ configurare_metoda_plata:
     lea dx, msg_metoda_plata
     int 21h
 
-    mov ah, 01h ; citirea opțiunii de la tastatură
+    mov ah, 01h ; Reading the value from the keyboard
     int 21h
 
     sub al, '0'
@@ -591,6 +615,7 @@ configurare_metoda_plata:
     cmp al, 1
     je metoda_disponibila_config
 
+; Setting the payment method avaliable
 metoda_indisponibila_config:
     mov ah, 09h
     lea dx, msg_indisp_plata
@@ -605,6 +630,7 @@ metoda_indisponibila_config:
 
     jmp configurare
 
+; Setting the payment method unavaliable
 metoda_disponibila_config:
     mov ah, 09h
     lea dx, msg_disp_plata
@@ -619,6 +645,7 @@ metoda_disponibila_config:
 
     jmp configurare
 
+; If method does not exist
 invalid_metoda_config:
     mov ah, 09h
     lea dx, msg_5
@@ -636,6 +663,7 @@ invalid_metoda_config:
 
 configurare endp
 
+; Cancel Process
 anulare proc
     mov ah, 09h
     lea dx, msg_4
